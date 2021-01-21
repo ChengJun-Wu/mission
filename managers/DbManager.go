@@ -13,6 +13,7 @@ func (m *DbManager) Boot() {
 		&models.Config{},
 		&models.User{},
 		&models.Route{},
+		&models.Server{},
 	)
 }
 
