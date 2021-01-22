@@ -13,8 +13,8 @@ func main()  {
 
 	r := gin.Default()
 
-	store := cookie.NewStore([]byte("secret"))
-	r.Use(sessions.Sessions("mysession", store))
+	store := cookie.NewStore([]byte("pBxhDzLBuFKLsXUr"))
+	r.Use(sessions.Sessions("mission-session-id", store))
 
 	managers.NewDbManager().Boot()
 	managers.NewInitManager().Boot()

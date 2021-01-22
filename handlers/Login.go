@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/base64"
+	"fmt"
 	"github.com/afocus/captcha"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -32,6 +33,7 @@ func (c *Login) Index(ctx *gin.Context) {
 	}
 
 	session := sessions.Default(ctx)
+	fmt.Println(form.Captcha, session.Get("captcha"))
 	if session.Get("captcha") != form.Captcha {
 		ctx.JSON(http.StatusOK, helpers.ResponseFail("验证码不正确"))
 		return
@@ -49,6 +51,7 @@ func (c *Login) Index(ctx *gin.Context) {
 		return
 	}
 	session.Set("uid", user.ID)
+	session.Save()
 	ctx.JSON(200, helpers.ResponseSuccess())
 }
 
@@ -58,7 +61,8 @@ func (c *Login) Captcha(ctx *gin.Context) {
 	img, code := cap.Create(6, captcha.NUM)
 
 	session := sessions.Default(ctx)
-	session.Set("captcha",code)
+	session.Set("captcha", code)
+	session.Save()
 
 	buff := bytes.NewBuffer(nil)
 	png.Encode(buff, img)
@@ -69,5 +73,25 @@ func (c *Login) Captcha(ctx *gin.Context) {
 func (c *Login) Logout(ctx *gin.Context) {
 	session := sessions.Default(ctx)
 	session.Delete("uid")
-	ctx.JSON(200, helpers.ResponseSuccess())
+	ctx.JSON(200, helpers.ResponseNeedLogin())
+}
+
+func (c *Login) User(ctx *gin.Context) {
+	session := sessions.Default(ctx)
+	uid := session.Get("uid")
+
+	if uid == nil {
+		ctx.JSON(http.StatusOK, helpers.ResponseFail("未登录", helpers.CodeNeedLogin))
+		return
+	}
+
+	db := orms.DB()
+	var user models.User
+	rs := db.Where("id = ?", uid).First(&user)
+	if rs.Error != nil {
+		ctx.JSON(http.StatusOK, helpers.ResponseFail(rs.Error.Error(), helpers.CodeNeedLogin))
+		return
+	}
+	user.Password = ""
+	ctx.JSON(200, helpers.ResponseSuccess(user))
 }

@@ -15,10 +15,14 @@ type RouteManager struct {
 
 func (m *RouteManager) Boot() {
 
+	test := new(handlers.Test)
+	m.R.GET("test", test.Index)
+
 	login := new(handlers.Login)
 	m.R.POST("login", login.Index)
 	m.R.GET("login/captcha", login.Captcha)
 	m.R.DELETE("login/logout", login.Logout)
+	m.R.GET("login/user", login.User)
 
 	backend := m.R.Group("backend")
 	backend.Use(middlewares.AuthMiddleware())
